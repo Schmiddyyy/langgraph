@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  ollama:
+    image: ollama/ollama
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    restart: unless-stopped
+    # Optional: uncomment if you have NVIDIA GPU support
+    # runtime: nvidia
+    # environment:
+    #   - NVIDIA_VISIBLE_DEVICES=all
+
+  swe-bench-lite-api:
+    image: paulroewer/swe-bench-lite-api
+    container_name: swe-bench-lite-api
+    ports:
+      - "8081:8080"
+    restart: unless-stopped
+    depends_on:
+      - ollama
+
+  swe-bench-lite-tester:
+    image: paulroewer/swe-bench-lite-tester
+    container_name: swe-bench-lite-tester
+    ports:
+      - "8082:8080"
+    volumes:
+      - ./workspace/repos:/repos
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+    depends_on:
+      - ollama
+      - swe-bench-lite-api
+
+volumes:
+  ollama:
